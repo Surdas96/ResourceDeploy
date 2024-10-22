@@ -1,0 +1,37 @@
+trigger: 
+- main
+
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+     name: SurdasAgent
+     demands: 
+      - agent.name -equals Milky
+
+  variables: 
+    azureServiceConnection: 'AzureServiceConnection'
+    resourceGroupName: 'ASCRG01'
+    location: 'eastus'
+    templateFile: 'infrastructure/template.json'
+    parametersFile: 'infrastructure/parameters.json'
+    
+  stages: 
+   - stage: DeployAzureResources
+     displayName: 'Deploy Azure Resoures'
+     jobs:
+      - job: Deploy
+        displayName: ' Deploy Resources using ARM Template'
+        steps: 
+        - task: AzureCLI@2
+          displayName: 'Deploy ARM Teamplate'
+          inputs: 
+            azureSubscription: $(azureServiceConnection)
+            scriptType: 'bash'
+            scriptLocatipn: inlineScript'
+            inlineScript: | 
+               az group create --name $ (resourceGroupName) --location $(location)
+               az deployment group create --resource-group $(resourceGroupName)\ --template-file $(templateFile)\ --parameter $(parameterFile)
+               
+                
